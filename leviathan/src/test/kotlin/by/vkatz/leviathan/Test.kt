@@ -30,7 +30,7 @@ class ServiceLocator(externalServices: ExternalServices) : Leviathan() {
     val taggedInstance1 = taggedInstance(TAG1) { Service() }
     val taggedInstance1clone = taggedInstance(TAG1) { Service() }
     val taggedInstance2 = taggedInstance(TAG2) { Service() }
-    val dependInstance = instance { DependService(instance.get()) }
+    val dependInstance = instance { DependService(instance()) }
     val newInstance = newInstance { Service() }
     val delegatedInstance = externalServices.service
 
@@ -58,7 +58,7 @@ class Test {
     @Test
     fun `instance # instance of service is created after calling it`() {
         val sl = ServiceLocator(esl)
-        sl.instance.get()
+        sl.instance()
         Leviathan.LazyServiceDelegate::class.java
                 .getDeclaredField("service\$delegate")
                 .also { it.isAccessible = true }
@@ -72,7 +72,7 @@ class Test {
     fun `Instance # provide same objects`() {
         val sl = ServiceLocator(esl)
         val instance by sl.instance
-        Assert.assertEquals(sl.instance.get(), sl.instance.get())
+        Assert.assertEquals(sl.instance(), sl.instance())
         Assert.assertEquals(instance, instance)
     }
 
@@ -80,7 +80,7 @@ class Test {
     fun `createInstance # provide new objects on every access`() {
         val sl = ServiceLocator(esl)
         val newInstance by sl.newInstance
-        Assert.assertNotEquals(sl.newInstance.get(), sl.newInstance.get())
+        Assert.assertNotEquals(sl.newInstance(), sl.newInstance())
         Assert.assertNotEquals(newInstance, newInstance)
     }
 
@@ -88,9 +88,9 @@ class Test {
     fun `taggedInstance # provide same objects for same tag`() {
         val sl = ServiceLocator(esl)
         val ts by sl.getTaggedService(TAG1)
-        Assert.assertEquals(sl.taggedInstance1.get(), ts)
-        Assert.assertEquals(sl.taggedInstance1.get(), sl.taggedInstance1clone.get())
-        Assert.assertEquals(sl.taggedInstance1.get(), sl.getTaggedService(TAG1).get())
+        Assert.assertEquals(sl.taggedInstance1(), ts)
+        Assert.assertEquals(sl.taggedInstance1(), sl.taggedInstance1clone())
+        Assert.assertEquals(sl.taggedInstance1(), sl.getTaggedService(TAG1)())
     }
 
     @Test
@@ -98,9 +98,9 @@ class Test {
         val sl = ServiceLocator(esl)
         val ts2 by sl.getTaggedService(TAG2)
         val ts3 by sl.getTaggedService(TAG3)
-        Assert.assertNotEquals(sl.taggedInstance1.get(), sl.taggedInstance2.get())
-        Assert.assertNotEquals(sl.taggedInstance1.get(), ts2)
-        Assert.assertNotEquals(sl.taggedInstance1.get(), ts3)
+        Assert.assertNotEquals(sl.taggedInstance1(), sl.taggedInstance2())
+        Assert.assertNotEquals(sl.taggedInstance1(), ts2)
+        Assert.assertNotEquals(sl.taggedInstance1(), ts3)
     }
 
     @Test
@@ -114,9 +114,9 @@ class Test {
     @Test
     fun `taggedInstance # release memory by tag, direct access`() {
         val sl = ServiceLocator(esl)
-        val ts = sl.taggedInstance1.get()
+        val ts = sl.taggedInstance1()
         sl.releaseByTag(TAG1)
-        Assert.assertNotEquals(ts, sl.taggedInstance1.get())
+        Assert.assertNotEquals(ts, sl.taggedInstance1())
     }
 
     @Test
@@ -136,7 +136,7 @@ class Test {
         val s by sl.instance
         val dps by sl.dependInstance
         Assert.assertEquals(dps.s, s)
-        Assert.assertEquals(sl.dependInstance.get().s, sl.instance.get())
+        Assert.assertEquals(sl.dependInstance().s, sl.instance())
     }
 
     @Test
@@ -145,20 +145,20 @@ class Test {
         val ess by esl.service
         val dps by sl.delegatedInstance
         Assert.assertEquals(ess, dps)
-        Assert.assertEquals(sl.delegatedInstance.get(), esl.service.get())
+        Assert.assertEquals(sl.delegatedInstance(), esl.service())
     }
 
     @Test
     fun `global # get() provide same objects except createInstance`() {
         val sl = ServiceLocator(esl)
-        Assert.assertEquals(sl.instance.get(), sl.instance.get())
-        Assert.assertEquals(sl.createdInstance.get(), sl.createdInstance.get())
-        Assert.assertEquals(sl.taggedInstance1.get(), sl.taggedInstance1.get())
-        Assert.assertEquals(sl.taggedInstance2.get(), sl.taggedInstance2.get())
-        Assert.assertEquals(sl.getTaggedService("RND").get(), sl.getTaggedService("RND").get())
-        Assert.assertEquals(sl.dependInstance.get(), sl.dependInstance.get())
-        Assert.assertNotEquals(sl.newInstance.get(), sl.newInstance.get())
-        Assert.assertEquals(sl.delegatedInstance.get(), sl.delegatedInstance.get())
+        Assert.assertEquals(sl.instance(), sl.instance())
+        Assert.assertEquals(sl.createdInstance(), sl.createdInstance())
+        Assert.assertEquals(sl.taggedInstance1(), sl.taggedInstance1())
+        Assert.assertEquals(sl.taggedInstance2(), sl.taggedInstance2())
+        Assert.assertEquals(sl.getTaggedService("RND")(), sl.getTaggedService("RND")())
+        Assert.assertEquals(sl.dependInstance(), sl.dependInstance())
+        Assert.assertNotEquals(sl.newInstance(), sl.newInstance())
+        Assert.assertEquals(sl.delegatedInstance(), sl.delegatedInstance())
     }
 
     @Test
@@ -168,6 +168,6 @@ class Test {
         val ps by sl.instance
         sl.instance.provides(s)
         Assert.assertEquals(s, ps)
-        Assert.assertEquals(s, sl.instance.get())
+        Assert.assertEquals(s, sl.instance())
     }
 }
