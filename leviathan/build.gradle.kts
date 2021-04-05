@@ -33,7 +33,7 @@ android {
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.32")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.31")
 }
 repositories {
     mavenCentral()

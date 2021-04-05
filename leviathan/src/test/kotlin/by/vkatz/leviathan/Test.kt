@@ -18,6 +18,8 @@ open class Service(initAction: (() -> Unit)? = null) {
 //Service based on another service
 class DependService(val s: Service) : Service()
 
+class CyclicService(val sp: () -> Service) : Service()
+
 //Outer independent ServiceLocator
 class ExternalServices : Leviathan() {
     val service = createInstance { Service() }
@@ -33,6 +35,8 @@ class ServiceLocator(externalServices: ExternalServices) : Leviathan() {
     val dependInstance = instance { DependService(instance()) }
     val newInstance = newInstance { Service() }
     val delegatedInstance = externalServices.service
+    val cyclicDep1: ServiceDelegate<CyclicService> = instance { CyclicService { cyclicDep2() } }
+    val cyclicDep2: ServiceDelegate<CyclicService> = instance { CyclicService { cyclicDep1() } }
 
     fun getTaggedService(tag: String) = taggedInstance(tag) { Service() }
 }
@@ -47,12 +51,12 @@ class Test {
     fun `instance # instance of service is not created before calling it`() {
         val sl = ServiceLocator(esl)
         Leviathan.LazyServiceDelegate::class.java
-                .getDeclaredField("service\$delegate")
-                .also { it.isAccessible = true }
-                .get(sl.instance)
-                .let { it as Lazy<*> }
-                .isInitialized()
-                .let { Assert.assertEquals(it, false) }
+            .getDeclaredField("service\$delegate")
+            .also { it.isAccessible = true }
+            .get(sl.instance)
+            .let { it as Lazy<*> }
+            .isInitialized()
+            .let { Assert.assertEquals(it, false) }
     }
 
     @Test
@@ -60,12 +64,12 @@ class Test {
         val sl = ServiceLocator(esl)
         sl.instance()
         Leviathan.LazyServiceDelegate::class.java
-                .getDeclaredField("service\$delegate")
-                .also { it.isAccessible = true }
-                .get(sl.instance)
-                .let { it as Lazy<*> }
-                .isInitialized()
-                .let { Assert.assertEquals(it, true) }
+            .getDeclaredField("service\$delegate")
+            .also { it.isAccessible = true }
+            .get(sl.instance)
+            .let { it as Lazy<*> }
+            .isInitialized()
+            .let { Assert.assertEquals(it, true) }
     }
 
     @Test
@@ -146,6 +150,18 @@ class Test {
         val dps by sl.delegatedInstance
         Assert.assertEquals(ess, dps)
         Assert.assertEquals(sl.delegatedInstance(), esl.service())
+    }
+
+
+    @Test
+    fun `cyclicService # cyclic services provide appropriate dependencies`() {
+        val sl = ServiceLocator(esl)
+        val c1 by sl.cyclicDep1
+        val c2 by sl.cyclicDep2
+        Assert.assertEquals(sl.cyclicDep1().sp(), sl.cyclicDep2())
+        Assert.assertEquals(sl.cyclicDep2().sp(), sl.cyclicDep1())
+        Assert.assertEquals(c1.sp(), c2)
+        Assert.assertEquals(c2.sp(), c1)
     }
 
     @Test
