@@ -32,8 +32,9 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.31")
     testImplementation("junit:junit:4.13.2")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.31")
+    implementation(project(":leviathan"))
 }
 repositories {
     mavenCentral()

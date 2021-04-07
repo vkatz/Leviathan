@@ -1,2 +1,5 @@
-include(":leviathan")
-include(":example")
+include(
+    ":example",
+    ":leviathan",
+    ":leviathan-inject"
+)

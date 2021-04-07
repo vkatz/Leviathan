@@ -1,24 +1,24 @@
 package by.vkatz.leviathan
 
+import org.jetbrains.annotations.TestOnly
 import java.util.*
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty0
+import kotlin.reflect.KProperty1
 
 /**
  * Service locator base class
- *
- * !!!WARNING!!!
- *
- * all instance methods provide !!!DELEGATES!!! and not an objects itself
- *
- * !!!WARNING!!!
  *
  * Usage:
  *
  * 1) extend class from Leviathan
  * 2) create services delegates by using one of the provided helpers
- * 3) use delegates within 'by' or '.invoke() / ()'
+ * 3) use delegates within 'by' or '.invoke() / ()' in case delegated service
+ * 4) use '=' in case direct service
  *
+ * Delegated services allow you to override providable
+ * content via [ServiceDelegate.provides]
  *
  * Example:
  * ```
@@ -26,11 +26,13 @@ import kotlin.reflect.KProperty
  *      fun doSmth(){ ... }
  * }
  *
- * class ServiceLocator : Leviathan() {
+ *    -----delegated service-----
+ *
+ * object ServiceLocator: Leviathan() {
  *      val service = instance { Service() }
  * }
  *
- * class Model(val sl:ServiceLocator = ServiceLocator()){
+ * class Model1(val sl: ServiceLocator = ServiceLocator){
  *      val service by sl.service
  *
  *      fun foo(){
@@ -38,33 +40,75 @@ import kotlin.reflect.KProperty
  *          sl.service().doSmth()
  *      }
  * }
+ *
+ * class Model2(val service: Service = ServiceLocator.service()){
+ *
+ *      fun foo(){
+ *          service.doSmth()
+ *      }
+ * }
+ *
+ * //override example
+ * fun foo(){
+ *      val anotherService = Service()
+ *      ServiceLocator.service.provides(anotherService)
+ *      //ServiceLocator.service === anotherService
+ * }
+ *
+ *   -----direct service----
+ *
+ * object ServiceLocator: Leviathan() {
+ *      val service by instance { Service() }
+ * }
+ *
+ * class Model1(val sl: ServiceLocator = ServiceLocator){
+ *      val service = sl.service
+ *
+ *      fun foo(){
+ *          service.doSmth()
+ *          sl.service.doSmth()
+ *      }
+ * }
+ *
+ * class Model2(val service: Service = ServiceLocator.service){
+ *
+ *      fun foo(){
+ *          service.doSmth()
+ *      }
+ * }
+ *
  * ```
  */
-open class Leviathan {
+abstract class Leviathan {
+    companion object;
 
     private val instanceTagServices = HashMap<String, Any?>()
 
     //----- Providers -----
 
     /**
+     * Create a delegate to provide same services per request
+     *
+     * Service will be created lazily
+     *
+     * @param creator factory method to create service objects
+     */
+    protected fun <T> instance(lazy: Boolean = true, creator: () -> T): ServiceDelegate<T> {
+        return if (lazy) {
+            LazyServiceDelegate(creator)
+        } else {
+            val service = creator()
+            ProvidableServiceDelegate { service }
+        }
+    }
+
+    /**
      * Create a delegate to provide new service per each request
      *
      * @param creator factory method to create service
      */
-    fun <T> newInstance(creator: () -> T): ServiceDelegate<T> {
+    protected fun <T> factory(creator: () -> T): ServiceDelegate<T> {
         return ProvidableServiceDelegate { creator() }
-    }
-
-    /**
-     * Create a delegate to provide same service per all request
-     *
-     * Service will be created immediately
-     *
-     * @param creator factory method to create service
-     */
-    fun <T> createInstance(creator: () -> T): ServiceDelegate<T> {
-        val service = creator()
-        return ProvidableServiceDelegate { service }
     }
 
     /**
@@ -78,27 +122,19 @@ open class Leviathan {
      * @param tag the tag that going to be associated to created instances of service
      * @param creator factory method to create service
      */
-    fun <T> taggedInstance(tag: String, creator: () -> T): ServiceDelegate<T> {
+    protected fun <T> taggedInstance(tag: String, creator: () -> T): ServiceDelegate<T> {
         return ProvidableServiceDelegate {
-            @Suppress("UNCHECKED_CAST")
-            var service: T? = instanceTagServices[tag] as? T
-            if (service == null) {
-                service = creator()
-                instanceTagServices[tag] = service
+            var service: T?
+            synchronized(this) {
+                @Suppress("UNCHECKED_CAST")
+                service = instanceTagServices[tag] as? T
+                if (service == null) {
+                    service = creator()
+                    instanceTagServices[tag] = service
+                }
             }
             service!!
         }
-    }
-
-    /**
-     * Create a delegate to provide same services per request
-     *
-     * Service will be created lazily
-     *
-     * @param creator factory method to create service objects
-     */
-    fun <T> instance(creator: () -> T): ServiceDelegate<T> {
-        return LazyServiceDelegate(creator)
     }
 
     //----- Utils -----

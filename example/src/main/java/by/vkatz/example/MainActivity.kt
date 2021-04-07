@@ -18,13 +18,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
-import by.vkatz.example.services.Services
+import androidx.lifecycle.ViewModelProvider
+import by.vkatz.example.services.*
 
 class MainModel(services: Services = Services) : ViewModel() {
-    private val api by services.api
-    private val db by services.db
-    private val ext by services.external
-    private val data by services.data
+    private val api = services.api
+    private val db = services.db
+    private val ext = services.external
+    private val data = services.data
 
     fun getApiData() = api.getData()
     fun getDbData() = db.getData()
