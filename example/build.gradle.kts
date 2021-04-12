@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("kotlin-kapt")
 }
 
 val composeVersion = "1.0.0-beta03"
@@ -34,7 +35,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":leviathan"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.31")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1")
     implementation("androidx.fragment:fragment-ktx:1.3.2")
@@ -47,4 +47,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:$composeVersion")
     implementation("androidx.compose.material:material:$composeVersion")
     implementation("androidx.compose.runtime:runtime-livedata:$composeVersion")
+    implementation(project(":leviathan"))
+    implementation(project(":leviathan-inject"))
+    kapt(project(":leviathan-inject"))
 }

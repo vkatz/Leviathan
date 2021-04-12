@@ -4,11 +4,6 @@ import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.KProperty0
 
-const val TAG1 = "someTag1"
-const val TAG2 = "someTag2"
-const val TAG3 = "someTag3"
-const val TAG_LOCAL = "local_tag"
-
 //Simple providable service
 open class Service(initAction: (() -> Unit)? = null) {
     init {
@@ -30,17 +25,12 @@ class ExternalServices : Leviathan() {
 class ServiceLocator(externalServices: ExternalServices) : Leviathan() {
     val instance by instance { Service() }
     val nonLazyInstance by instance(false) { Service() }
-    val taggedInstance1 by taggedInstance(TAG1) { Service() }
-    val taggedInstance1clone by taggedInstance(TAG1) { Service() }
-    val taggedInstance2 by taggedInstance(TAG2) { Service() }
     val dependInstance by instance { DependService(instance) }
     val factory by factory { Service() }
     val delegatedInstance = externalServices.service
     val cyclicDep1: CyclicService by instance { CyclicService { cyclicDep2 } }
     val cyclicDep2: CyclicService by instance { CyclicService { cyclicDep1 } }
     val overrideTest = instance { Service() }
-
-    fun getTaggedService(tag: String) = taggedInstance(tag) { Service() }()
 }
 
 //------------Code------------
@@ -97,51 +87,6 @@ class Test {
     }
 
     @Test
-    fun `taggedInstance # provide same objects for same tag`() {
-        val sl = ServiceLocator(esl)
-        val ts = sl.getTaggedService(TAG1)
-        Assert.assertEquals(sl.taggedInstance1, ts)
-        Assert.assertEquals(sl.taggedInstance1, sl.taggedInstance1clone)
-        Assert.assertEquals(sl.taggedInstance1, sl.getTaggedService(TAG1))
-    }
-
-    @Test
-    fun `taggedInstance # provide different objects for different tags`() {
-        val sl = ServiceLocator(esl)
-        val ts2 = sl.getTaggedService(TAG2)
-        val ts3 = sl.getTaggedService(TAG3)
-        Assert.assertNotEquals(sl.taggedInstance1, sl.taggedInstance2)
-        Assert.assertNotEquals(sl.taggedInstance1, ts2)
-        Assert.assertNotEquals(sl.taggedInstance1, ts3)
-    }
-
-    @Test
-    fun `taggedInstance # custom created tagged service provide same instance`() {
-        val sl = ServiceLocator(esl)
-        val ts = sl.getTaggedService(TAG_LOCAL)
-        val tsCopy = sl.getTaggedService(TAG_LOCAL)
-        Assert.assertEquals(ts, tsCopy)
-    }
-
-    @Test
-    fun `taggedInstance # release memory by tag, direct access`() {
-        val sl = ServiceLocator(esl)
-        val ts = sl.taggedInstance1
-        sl.releaseByTag(TAG1)
-        Assert.assertNotEquals(ts, sl.taggedInstance1)
-    }
-
-    @Test
-    @Suppress("UnnecessaryVariable")
-    fun `taggedInstance # release memory by tag, delegate access`() {
-        val sl = ServiceLocator(esl)
-        val tsInstance1 = sl.taggedInstance1
-        sl.releaseByTag(TAG1)
-        val tsInstance2 = sl.taggedInstance1
-        Assert.assertNotEquals(tsInstance1, tsInstance2)
-    }
-
-    @Test
     fun `dependInstance # use same object as used instance`() {
         val sl = ServiceLocator(esl)
         val s = sl.instance
@@ -176,16 +121,13 @@ class Test {
         val sl = ServiceLocator(esl)
         Assert.assertEquals(sl.instance, sl.instance)
         Assert.assertEquals(sl.nonLazyInstance, sl.nonLazyInstance)
-        Assert.assertEquals(sl.taggedInstance1, sl.taggedInstance1)
-        Assert.assertEquals(sl.taggedInstance2, sl.taggedInstance2)
-        Assert.assertEquals(sl.getTaggedService("RND"), sl.getTaggedService("RND"))
         Assert.assertEquals(sl.dependInstance, sl.dependInstance)
         Assert.assertNotEquals(sl.factory, sl.factory)
         Assert.assertEquals(sl.delegatedInstance, sl.delegatedInstance)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <SL : Leviathan, T> SL.provides(prop : KProperty0<T>, value : T?){
+    fun <SL : Leviathan, T> SL.provides(prop: KProperty0<T>, value: T?) {
         this::class.java
             .getDeclaredField("${prop.name}\$delegate")
             .apply { isAccessible = true }
@@ -200,7 +142,7 @@ class Test {
         val sl = ServiceLocator(esl)
         val s = Service()
         //hard override
-        sl.provides(sl::instance,s)
+        sl.provides(sl::instance, s)
         Assert.assertEquals(s, sl.instance)
         //soft override
         sl.overrideTest.provides(s)

@@ -1,11 +1,10 @@
 package by.vkatz.leviathan
 
-import org.jetbrains.annotations.TestOnly
-import java.util.*
+import by.vkatz.leviathan.Leviathan.ServiceDelegate
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
-import kotlin.reflect.KProperty0
-import kotlin.reflect.KProperty1
+
+//todo scoped instance
 
 /**
  * Service locator base class
@@ -82,8 +81,6 @@ import kotlin.reflect.KProperty1
 abstract class Leviathan {
     companion object;
 
-    private val instanceTagServices = HashMap<String, Any?>()
-
     //----- Providers -----
 
     /**
@@ -109,44 +106,6 @@ abstract class Leviathan {
      */
     protected fun <T> factory(creator: () -> T): ServiceDelegate<T> {
         return ProvidableServiceDelegate { creator() }
-    }
-
-    /**
-     * Create a delegate to provide same services per request with same tag
-     *
-     * Service will be created lazily
-     *
-     * Provide same services (do not misplace with service delegate) for same tags
-     * until you call [releaseByTag] for specific tag
-     *
-     * @param tag the tag that going to be associated to created instances of service
-     * @param creator factory method to create service
-     */
-    protected fun <T> taggedInstance(tag: String, creator: () -> T): ServiceDelegate<T> {
-        return ProvidableServiceDelegate {
-            var service: T?
-            synchronized(this) {
-                @Suppress("UNCHECKED_CAST")
-                service = instanceTagServices[tag] as? T
-                if (service == null) {
-                    service = creator()
-                    instanceTagServices[tag] = service
-                }
-            }
-            service!!
-        }
-    }
-
-    //----- Utils -----
-
-    /**
-     * Release associated service
-     *
-     * Calling the delegate associated to relative tag will generate new service
-     * instance upon next call
-     */
-    fun releaseByTag(tag: String) {
-        instanceTagServices.remove(tag)
     }
 
     //----- Helpers -----
