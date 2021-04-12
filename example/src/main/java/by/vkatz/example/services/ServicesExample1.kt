@@ -52,7 +52,7 @@ class Services1Model(services: Services = ServicesImpl) : ViewModel() {
 }
 
 @Suppress("unused")
-class TestExample{
+class Test1Example{
 
     fun someTest(){
         val services = Services()
