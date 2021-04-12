@@ -1,7 +1,7 @@
 package by.vkatz.leviathan.inject
 
 
-inline fun <reified T> inject(serviceName: String = LeviathanService.LEVIATHAN_DEFAULT_SERVICE_NAME): T {
+inline fun <reified T> inject(): T {
     //todo generate smth to get deps
     return null as T // yolo
 }
