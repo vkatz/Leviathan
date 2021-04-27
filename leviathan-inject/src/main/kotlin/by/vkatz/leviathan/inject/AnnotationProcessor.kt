@@ -94,18 +94,29 @@ class AnnotationProcessor : AbstractProcessor() {
         validateServicesTypes(services)
 
         //collect services info
-        val defaultServicesCount = services.count { it.getServiceRawName().isBlank() }
-        if (defaultServicesCount > 1) log(Diagnostic.Kind.WARNING, "There is more than 1 unnamed service defined, default $DEFAULT_SERVICE_NAME will not be generated")
+        val defaultServicesCount = services.count { it.getAnnotation(LeviathanService::class.java).defaultService }
+        if (defaultServicesCount > 1) {
+            log(Diagnostic.Kind.ERROR, "You may have only 1 default service")
+            throw RuntimeException()
+        }
+        val unnamedServicesCount = services.count { it.getAnnotation(LeviathanService::class.java).className.isBlank() }
+        if (defaultServicesCount == 0 && unnamedServicesCount > 1) {
+            log(Diagnostic.Kind.ERROR, "You may have only 1 unnamed default service, please name others")
+            throw RuntimeException()
+        }
         val servicesData = services.map {
-            val rawName = it.getServiceRawName()
+            val annotation = it.getAnnotation(LeviathanService::class.java)
+            val rawName = annotation.className
             val name = when {
                 rawName.isNotBlank() -> rawName
-                rawName.isBlank() && defaultServicesCount == 1 -> DEFAULT_SERVICE_NAME
+                rawName.isBlank() && defaultServicesCount == 0 && unnamedServicesCount == 1 -> DEFAULT_SERVICE_NAME
                 else -> "${it.simpleName}Impl"
             }
             ServiceGenInfo(it, name, ArrayList())
         }
-        val defaultService = servicesData.firstOrNull { it.serviceName == DEFAULT_SERVICE_NAME }
+        val defaultService =
+            if (defaultServicesCount == 1) servicesData.first { it.serviceOwner.getAnnotation(LeviathanService::class.java).defaultService }
+            else servicesData.firstOrNull { it.serviceName == DEFAULT_SERVICE_NAME }
 
         //collect elements info
         val elementsInfo = ArrayList<Pair<Element?, ElementGenerationData>>()
@@ -214,8 +225,6 @@ class AnnotationProcessor : AbstractProcessor() {
             null
         }
     }
-
-    private fun Element.getServiceRawName() = getAnnotation(LeviathanService::class.java).className
 
     private data class ElementGenerationData(
         val element: Element,

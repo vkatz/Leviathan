@@ -8,6 +8,7 @@ import by.vkatz.leviathan.inject.LeviathanService
 //--------service bases-------------
 
 @LeviathanService //no specific name - will be used default
+//@LeviathanService("MyDefaultServices1",  true) //specific name and preset as default service
 interface LeviathanServiceBase
 
 @LeviathanService("LeviathanCustomServiceImpl") //specific name
