@@ -9,7 +9,6 @@ annotation class LeviathanService(
     val defaultService: Boolean = false,
 )
 
-@Repeatable
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class LeviathanInstance(
@@ -19,7 +18,6 @@ annotation class LeviathanInstance(
     val provideBy: KClass<*> = LeviathanService::class,
 )
 
-@Repeatable
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class LeviathanFactory(
