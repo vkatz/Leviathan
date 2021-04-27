@@ -3,7 +3,7 @@ Kotlin based service locator for easy DI implementation
 
 ## Advantages:
 
-# All wesions
+### All wesions
 
 Runtime crushes - NOPE (unless you want it), you provide a builders so it is impossible to get runtime class cast exception
 
@@ -17,7 +17,7 @@ Transparency - YES YES YES YES, you are the owner of code, do modules and provid
 
 Simple - ALMOST, you need to know how delegated work, BUT, it is pretty easy.
 
-# No code generation version:
+### No code generation version:
 
 Code generation - NOPE, there is nothing to generate
 
@@ -25,7 +25,7 @@ Slowdown build - NOPE, no code generation means no need additional time to compi
 
 A lot of annotations - NOPE, there is no annotations needed
 
-# Inject version
+### Inject version
 
 Code generation - a bit... only Services classes u asked to make... thats it.. no helpers nor strange code
 
