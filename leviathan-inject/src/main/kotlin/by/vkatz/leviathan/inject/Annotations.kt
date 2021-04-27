@@ -1,18 +1,28 @@
 package by.vkatz.leviathan.inject
 
-enum class ProvideBy(internal val keyWorld: String) {
-    Instance("instance"),
-    Factory("factory")
-}
+import kotlin.reflect.KClass
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class LeviathanService(
+    val className: String = ""
+)
 
 @Repeatable
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class LeviathanService(
-    val serviceName: String = "LeviathanServices",
+annotation class LeviathanInstance(
     val propertyName: String = "",
-    val provideBy: ProvideBy = ProvideBy.Instance
+    val lazy: Boolean = true,
+    val provideAs: KClass<*> = LeviathanService::class,
+    val provideBy: KClass<*> = LeviathanService::class,
 )
 
+@Repeatable
+@Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class LeviathanServicePackage
+annotation class LeviathanFactory(
+    val propertyName: String = "",
+    val provideAs: KClass<*> = LeviathanService::class,
+    val provideBy: KClass<*> = LeviathanService::class,
+)
