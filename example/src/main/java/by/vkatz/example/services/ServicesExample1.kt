@@ -8,6 +8,9 @@ class Service1
 interface Service2
 class Service2Impl : Service2
 
+class Service3(val s: Service1)
+
+
 open class Services : Leviathan() {
     val service1InstanceDelegate = instance { Service1() }
     val service1InstanceProvider by instance { Service1() }
@@ -15,6 +18,8 @@ open class Services : Leviathan() {
     val service1FactoryProvider by factory { Service1() }
 
     val service2InstanceDelegate = instance<Service2> { Service2Impl() } //hide impl example
+
+    val service3InstanceDelegate = instance { Service3(service1InstanceDelegate()) }
 }
 
 object ServicesImpl : Services()
@@ -38,6 +43,8 @@ class Services1Model(services: Services = ServicesImpl) : ViewModel() {
 
     val s2 = services.service2InstanceDelegate() // type is Service2, impl is Service2Impl
 
+    val s3 = services.service3InstanceDelegate()
+
     fun getRefs() = "Services1Model:\n" +
             listOf(
                 "sid1 -> $sid1",
@@ -47,14 +54,16 @@ class Services1Model(services: Services = ServicesImpl) : ViewModel() {
                 "sfd2 -> $sfd2",
                 "sfp  -> $sfp",
                 "s2   -> $s2",
-                  )
+                "s3   -> $s3",
+                "s3.s1-> $sid1",
+            )
                 .joinToString("\n")
 }
 
 @Suppress("unused")
-class Test1Example{
+class Test1Example {
 
-    fun someTest(){
+    fun someTest() {
         val services = Services()
         val s1 = Service1()
         services.service1InstanceDelegate.provides(s1)
