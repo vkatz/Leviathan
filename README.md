@@ -3,7 +3,7 @@ Kotlin based service locator for easy DI implementation
 
 ## Advantages:
 
-### All wesions
+### All versions
 
 Runtime crushes - NOPE (unless you want it), you provide a builders so it is impossible to get runtime class cast exception
 
